@@ -5,20 +5,39 @@ use std::fmt;
 use std::result;
 
 pub type Result<T> = result::Result<T, Error>;
-
 pub type Cause = Option<Box<error::Error>>;
+pub type Description = Cow<'static, str>;
 
 #[derive(Debug)]
 pub struct Error {
     kind: ErrorKind,
-    description: Cow<'static, str>,
+    description: Description,
     cause: Cause,
 }
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    /// Couldn't interpret this data as an image.
+    Font,
     ImageFormat,
+    IO,
+}
+
+impl Error {
+    pub fn io<D: Into<Description>, E: error::Error + 'static>(e: E, description: D) -> Error {
+        Error {
+            kind: ErrorKind::IO,
+            description: description.into(),
+            cause: Some(Box::new(e)),
+        }
+    }
+
+    pub fn font<D: Into<Description>>(description: D) -> Error {
+        Error {
+            kind: ErrorKind::Font,
+            description: description.into(),
+            cause: None,
+        }
+    }
 }
 
 impl From<image::ImageError> for Error {
