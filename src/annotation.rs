@@ -96,7 +96,7 @@ impl Annotation {
         let (text_width, text_height) = text_size(&self.text, font, scale);
 
         // To reduce the janky jagginess of the black border around each letter, we want to render the 
-        // words themselves at 4x resolution and then paste that on top of the existing image.
+        // words themselves at 16x resolution and then paste that on top of the existing image.
         let (x, y) = self.position(c_width, c_height, text_width, text_height);
         let x = x * AA_FACTOR;
         let y = y * AA_FACTOR;
