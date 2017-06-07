@@ -102,7 +102,7 @@ impl Annotation {
         let y = y * AA_FACTOR;
 
         let mut edge_rendering = ImageBuffer::from_pixel(text_width * AA_FACTOR, text_height * AA_FACTOR, Luma([0u8]));
-        drawing::draw_text_with_font_mut(&mut edge_rendering, Luma([255u8]), 0, 0, scale_aa, &font, &self.text);
+        drawing::draw_text_mut(&mut edge_rendering, Luma([255u8]), 0, 0, scale_aa, &font, &self.text);
 
         let edge_rendering = edges::canny(&edge_rendering, 255.0, 255.0);
         let edge_pixels = edge_rendering.pixels().enumerate()
@@ -124,7 +124,7 @@ impl Annotation {
             drawing::draw_hollow_rect_mut(pixels, rect, black_pixel);
         }
 
-        drawing::draw_text_with_font_mut(pixels, white_pixel, x, y, scale_aa, &font, &self.text);
+        drawing::draw_text_mut(pixels, white_pixel, x, y, scale_aa, &font, &self.text);
 
     }
 }
