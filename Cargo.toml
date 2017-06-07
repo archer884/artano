@@ -5,5 +5,5 @@ authors = ["J/A <archer884@gmail.com>"]
 
 [dependencies]
 image = "0.13"
-imageproc = { git = "https://github.com/archer884/imageproc" }
+imageproc = { git = "https://github.com/PistonDevelopers/imageproc.git" }
 rusttype = "0.2"
