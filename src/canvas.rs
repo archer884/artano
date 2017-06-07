@@ -1,31 +1,46 @@
 use annotation::Annotation;
 use error::Result;
-use image::{self, DynamicImage, FilterType, GenericImage, ImageBuffer, imageops, Luma, Rgba, RgbaImage};
-use std::borrow::Borrow;
+use image::{self, DynamicImage, FilterType, GenericImage, ImageFormat, imageops, RgbaImage};
+use rusttype::Font;
+use std::io;
 
-// The intent of this Image type is to provide an interface to consumers of this library that is 
-// not dependent on the (sometimes confusing) types provided by the image and imageproc libraries.
-// Fill this with data and provide it to my API and then it will spit out the right thinga at the 
-// right time.
+use AA_FACTOR;
 
-pub struct Canvas(DynamicImage);
+pub struct Canvas {
+    base: DynamicImage,
+    overlay: DynamicImage,
+    width: u32,
+    height: u32,
+}
 
 impl Canvas {
     pub fn read_from_buffer(buf: &[u8]) -> Result<Canvas> {
-        Ok(Canvas(image::load_from_memory(buf)?))
+        let base = image::load_from_memory(buf)?;
+        let (width, height) = base.dimensions();
+        Ok(Canvas {
+            base,
+            overlay: DynamicImage::ImageRgba8(RgbaImage::new(width * AA_FACTOR, height * AA_FACTOR)),
+            width,
+            height,
+        })
     }
 
-    pub fn annotate<T: Borrow<Annotation>, I: IntoIterator<Item = T>>(&self, annotations: I) -> Vec<u8> {
-        let mut pixels = self.0.clone();
-        let (width, height) = pixels.dimensions();
-        let mut text_rendering = DynamicImage::ImageRgba8(RgbaImage::new(width * 4, height * 4));
+    pub fn add_annotation<'a>(&mut self, annotation: &Annotation, font: &Font<'a>, scale_factor: f32) {
+        annotation.render_text(&mut self.overlay, font, scale_factor, self.width, self.height);
+    }
 
-        for annotation in annotations.into_iter() {
-            annotation.borrow().render_text(&mut text_rendering, font, scale_factor, width, height);
-        }
+    pub fn render(&mut self) {
+        let downsampled_text = imageops::resize(&self.overlay, self.width, self.height, FilterType::CatmullRom);
+        imageops::overlay(&mut self.base, &mut DynamicImage::ImageRgba8(downsampled_text), 0, 0);
+    }
 
-        let downsampled_text = imageops::resize(&text_rendering, width, height, FilterType::CatmullRom);
-        imageops::overlay(&mut pixels, &mut DynamicImage::ImageRgba8(downsampled_text), 0, 0);
-        pixels.raw_pixels()
+    pub fn save_jpg<W: io::Write>(&self, stream: &mut W) -> io::Result<()> {
+        self.base.save(stream, ImageFormat::JPEG)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+    }
+
+    pub fn save_png<W: io::Write>(&self, stream: &mut W) -> io::Result<()> {
+        self.base.save(stream, ImageFormat::PNG)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 }
