@@ -25,7 +25,8 @@ impl Canvas {
         })
     }
 
-    pub fn add_annotation<'a>(&mut self, annotation: &Annotation, font: &Font<'a>, scale_factor: f32) {
+    pub fn add_annotation<'a>(&mut self, annotation: &Annotation, font: &Font<'a>, scale_multiplier: f32) {
+        let scale_factor = (self.height as f32 / 10.0) * scale_multiplier;
         annotation.render_text(&mut self.overlay, font, scale_factor, self.width, self.height);
     }
 

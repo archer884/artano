@@ -5,8 +5,8 @@ use rusttype::{Font, Scale};
 
 #[derive(Debug)]
 pub struct Annotation {
-    text: String,
-    position: Position,
+    pub text: String,
+    pub position: Position,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -92,7 +92,7 @@ impl Annotation {
         let black_pixel = Rgba([0, 0, 0, 255]);
         
         let scale = Scale::uniform(scale_factor);
-        let scale_4x = Scale::uniform(scale_factor * AA_FACTOR_FLOAT);
+        let scale_aa = Scale::uniform(scale_factor * AA_FACTOR_FLOAT);
         let (text_width, text_height) = text_size(&self.text, font, scale);
 
         // To reduce the janky jagginess of the black border around each letter, we want to render the 
@@ -102,7 +102,7 @@ impl Annotation {
         let y = y * AA_FACTOR;
 
         let mut edge_rendering = ImageBuffer::from_pixel(text_width * AA_FACTOR, text_height * AA_FACTOR, Luma([0u8]));
-        drawing::draw_text_with_font_mut(&mut edge_rendering, Luma([255u8]), 0, 0, scale_4x, &font, &self.text);
+        drawing::draw_text_with_font_mut(&mut edge_rendering, Luma([255u8]), 0, 0, scale_aa, &font, &self.text);
 
         let edge_rendering = edges::canny(&edge_rendering, 255.0, 255.0);
         let edge_pixels = edge_rendering.pixels().enumerate()
@@ -124,7 +124,7 @@ impl Annotation {
             drawing::draw_hollow_rect_mut(pixels, rect, black_pixel);
         }
 
-        drawing::draw_text_with_font_mut(pixels, white_pixel, x, y, scale_4x, &font, &self.text);
+        drawing::draw_text_with_font_mut(pixels, white_pixel, x, y, scale_aa, &font, &self.text);
 
     }
 }
