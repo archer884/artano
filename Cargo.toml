@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["J/A <archer884@gmail.com>"]
 
 [dependencies]
-image = "*"
+image = "0.13"
 imageproc = { git = "https://github.com/archer884/imageproc" }
-rusttype = "*"
+rusttype = "0.2"
