@@ -1,9 +1,11 @@
+extern crate conv;
 extern crate image;
 extern crate imageproc;
 extern crate rusttype;
 
 mod annotation;
 mod canvas;
+mod draw;
 mod error;
 
 pub use annotation::*;

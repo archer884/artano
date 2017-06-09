@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["J/A <archer884@gmail.com>"]
 
 [dependencies]
+conv = "*"
 image = "0.13"
-imageproc = { git = "https://github.com/PistonDevelopers/imageproc.git" }
+imageproc = "0.8"
 rusttype = "0.2"
