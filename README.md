@@ -4,7 +4,7 @@
 
 Based on the `image` and `imageproc` crates. Remind me to update this when `imageproc` releases a new version...
 
-This crate is, clearly, named for the Dark Lord Sauron. The name is taken from Quenya, meaning 'High Smith.' So it's for making evil things--like memes.
+This crate is, clearly, named for the Dark Lord Sauron. The name is taken from the Quenya for 'High Smith.' So it's for making evil things--like memes.
 
 ## License
 
