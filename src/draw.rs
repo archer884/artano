@@ -4,11 +4,19 @@ use imageproc::definitions::Clamp;
 use rusttype::{self, Font, PositionedGlyph, Scale};
 
 
-pub fn text<'a, I>(image: &'a mut I, color: I::Pixel, x: u32, y: u32, scale: Scale, font: &'a Font<'a>, text: &'a str)
-    where I: GenericImage,
-          <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>
+pub fn text<'a, I>(
+    image: &'a mut I,
+    color: I::Pixel,
+    x: u32,
+    y: u32,
+    scale: Scale,
+    font: &'a Font<'a>,
+    text: &'a str,
+) where
+    I: GenericImage,
+    <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
 {
-    
+
     use imageproc::pixelops;
 
     let v_metrics = font.v_metrics(scale);

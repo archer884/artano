@@ -31,9 +31,11 @@ pub fn load_typeface<R: std::io::Read>(stream: &mut R) -> Result<Typeface> {
     use rusttype::FontCollection;
 
     let mut buf = Vec::new();
-    stream.read_to_end(&mut buf)
-        .map_err(|e| Error::io(e, "Unable to read font stream"))?;
+    stream.read_to_end(&mut buf).map_err(|e| {
+        Error::io(e, "Unable to read font stream")
+    })?;
 
-    FontCollection::from_bytes(buf).into_font()
-        .ok_or_else(|| Error::font("Unable to find a font in font data"))
+    FontCollection::from_bytes(buf).into_font().ok_or_else(|| {
+        Error::font("Unable to find a font in font data")
+    })
 }

@@ -51,14 +51,24 @@ impl Annotation {
                 (x, y)
             }
 
-            pub fn middle(width: u32, height: u32, text_width: u32, text_height: u32) -> (u32, u32) {
+            pub fn middle(
+                width: u32,
+                height: u32,
+                text_width: u32,
+                text_height: u32,
+            ) -> (u32, u32) {
                 let x = (width / 2) - (text_width / 2);
                 let y = (height / 2) - (text_height / 2);
 
                 (x, y)
             }
 
-            pub fn bottom(width: u32, height: u32, text_width: u32, text_height: u32) -> (u32, u32) {
+            pub fn bottom(
+                width: u32,
+                height: u32,
+                text_width: u32,
+                text_height: u32,
+            ) -> (u32, u32) {
                 let x = (width / 2) - (text_width / 2);
                 let y = {
                     let height = height as f32;
@@ -77,12 +87,14 @@ impl Annotation {
         }
     }
 
-    pub fn render_text<'a>(&self, 
-                       pixels: &'a mut DynamicImage,
-                       font: &'a Font<'a>,
-                       scale_factor: f32,
-                       c_width: u32,
-                       c_height: u32) {
+    pub fn render_text<'a>(
+        &self,
+        pixels: &'a mut DynamicImage,
+        font: &'a Font<'a>,
+        scale_factor: f32,
+        c_width: u32,
+        c_height: u32,
+    ) {
 
         use AA_FACTOR;
         use AA_FACTOR_FLOAT;
@@ -91,22 +103,27 @@ impl Annotation {
         // Apparently, this is not CSS...
         let white_pixel = Rgba([255, 255, 255, 255]);
         let black_pixel = Rgba([0, 0, 0, 255]);
-        
+
         let scale = Scale::uniform(scale_factor);
         let scale_aa = Scale::uniform(scale_factor * AA_FACTOR_FLOAT);
         let (text_width, text_height) = text_size(&self.text, font, scale);
 
-        // To reduce the janky jagginess of the black border around each letter, we want to render the 
-        // words themselves at 16x resolution and then paste that on top of the existing image.
+        // To reduce the janky jagginess of the black border around each letter, we want to render 
+        // the words themselves at 16x resolution and then paste that on top of the existing
+        // image.
         let (x, y) = self.position(c_width, c_height, text_width, text_height);
         let x = x * AA_FACTOR;
         let y = y * AA_FACTOR;
 
-        let mut edge_rendering = ImageBuffer::from_pixel(text_width * AA_FACTOR, text_height * AA_FACTOR, Luma([0u8]));
-        draw::text(&mut edge_rendering, Luma([255u8]), 0, 0, scale_aa, &font, &self.text);
+        let mut edge_rendering =
+            ImageBuffer::from_pixel(text_width * AA_FACTOR, text_height * AA_FACTOR, Luma([0u8]));
+
+        draw::text(&mut edge_rendering, Luma([255u8]), 0, 0, scale_aa, font, &self.text);
 
         let edge_rendering = edges::canny(&edge_rendering, 255.0, 255.0);
-        let edge_pixels = edge_rendering.pixels().enumerate()
+        let edge_pixels = edge_rendering
+            .pixels()
+            .enumerate()
             .filter(|&(_, &px)| Luma([255u8]) == px)
             .map(|(idx, _)| {
                 let idx = idx as u32;
@@ -125,7 +142,7 @@ impl Annotation {
             drawing::draw_hollow_rect_mut(pixels, rect, black_pixel);
         }
 
-        draw::text(pixels, white_pixel, x, y, scale_aa, &font, &self.text);
+        draw::text(pixels, white_pixel, x, y, scale_aa, font, &self.text);
 
     }
 }
@@ -138,14 +155,14 @@ impl Annotation {
 fn text_size<'a>(s: &'a str, font: &'a Font<'a>, scale: Scale) -> (u32, u32) {
     use rusttype::VMetrics;
 
-    let text_width = font.glyphs_for(s.chars())
+    let text_width: f32 = font.glyphs_for(s.chars())
         .map(|glyph| glyph.scaled(scale).h_metrics().advance_width)
-        .sum::<f32>();
+        .sum();
 
     // The "v-metrics" for any given letter in a font are the same for a given scale, so we don't
     // need to check this for each glyph.
     let text_height = {
-        let VMetrics { ascent, descent, ..} = font.v_metrics(scale);
+        let VMetrics { ascent, descent, .. } = font.v_metrics(scale);
         (ascent - descent) as u32
     };
 
