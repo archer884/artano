@@ -101,6 +101,8 @@ impl Annotation {
 
         // The final value in the array here is the *opacity* of the pixel. Not the transparency.
         // Apparently, this is not CSS...
+        //
+        // Also, why the hell can I not make this a constant?
         let white_pixel = Rgba([255, 255, 255, 255]);
         let black_pixel = Rgba([0, 0, 0, 255]);
 
