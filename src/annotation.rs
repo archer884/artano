@@ -95,7 +95,6 @@ impl Annotation {
         c_width: u32,
         c_height: u32,
     ) {
-
         use AA_FACTOR;
         use AA_FACTOR_FLOAT;
 
@@ -110,16 +109,14 @@ impl Annotation {
         let scale_aa = Scale::uniform(scale_factor * AA_FACTOR_FLOAT);
         let (text_width, text_height) = text_size(&self.text, font, scale);
 
-        // To reduce the janky jagginess of the black border around each letter, we want to render 
+        // To reduce the janky jagginess of the black border around each letter, we want to render
         // the words themselves at 16x resolution and then paste that on top of the existing
         // image.
         let (x, y) = self.position(c_width, c_height, text_width, text_height);
         let x = x * AA_FACTOR;
         let y = y * AA_FACTOR;
 
-        let mut edge_rendering =
-            ImageBuffer::from_pixel(text_width * AA_FACTOR, text_height * AA_FACTOR, Luma([0u8]));
-
+        let mut edge_rendering = ImageBuffer::from_pixel(text_width * AA_FACTOR, text_height * AA_FACTOR, Luma([0u8]));
         draw::text(&mut edge_rendering, Luma([255u8]), 0, 0, scale_aa, font, &self.text);
 
         let edge_rendering = edges::canny(&edge_rendering, 255.0, 255.0);
@@ -145,7 +142,6 @@ impl Annotation {
         }
 
         draw::text(pixels, white_pixel, x, y, scale_aa, font, &self.text);
-
     }
 }
 
@@ -164,7 +160,9 @@ fn text_size<'a>(s: &'a str, font: &'a Font<'a>, scale: Scale) -> (u32, u32) {
     // The "v-metrics" for any given letter in a font are the same for a given scale, so we don't
     // need to check this for each glyph.
     let text_height = {
-        let VMetrics { ascent, descent, .. } = font.v_metrics(scale);
+        let VMetrics {
+            ascent, descent, ..
+        } = font.v_metrics(scale);
         (ascent - descent) as u32
     };
 
