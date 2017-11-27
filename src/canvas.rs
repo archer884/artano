@@ -33,9 +33,9 @@ impl Canvas {
         font: &Font<'a>,
         scale_multiplier: f32,
     ) {
-        // Font scale is, in fact, the height in pixels of each glyph. Here we set that to be 
-        // one tenth the height of the image itself modified by the scale multiplier provided 
-        // by the user. The multiplier serves to allow us to shrink or expand text to fit images 
+        // Font scale is, in fact, the height in pixels of each glyph. Here we set that to be
+        // one tenth the height of the image itself modified by the scale multiplier provided
+        // by the user. The multiplier serves to allow us to shrink or expand text to fit images
         // that are either too tall or too small for a given annotation.
         let scale = (self.height as f32 / 10.0) * scale_multiplier;
 
