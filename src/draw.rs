@@ -1,7 +1,7 @@
 use conv::ValueInto;
 use image::{GenericImage, Pixel};
 use imageproc::definitions::Clamp;
-use rusttype::{self, Font, PositionedGlyph, Scale};
+use rusttype::{self, Font, Scale};
 
 
 pub fn text<'a, I>(
@@ -16,17 +16,14 @@ pub fn text<'a, I>(
     I: GenericImage,
     <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
 {
-
     use imageproc::pixelops;
 
     let v_metrics = font.v_metrics(scale);
     let offset = rusttype::point(0.0, v_metrics.ascent);
 
-    let glyphs: Vec<PositionedGlyph> = font.layout(text, scale, offset).collect();
-
-    for g in glyphs {
-        if let Some(bb) = g.pixel_bounding_box() {
-            g.draw(|gx, gy, gv| {
+    for glyph in font.layout(text, scale, offset) {
+        if let Some(bb) = glyph.pixel_bounding_box() {
+            glyph.draw(|gx, gy, gv| {
                 let gx = gx as i32 + bb.min.x;
                 let gy = gy as i32 + bb.min.y;
 
