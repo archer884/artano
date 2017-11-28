@@ -42,7 +42,7 @@ impl Annotation {
     fn position(&self, width: u32, height: u32, text_width: u32, text_height: u32) -> (u32, u32) {
         mod position {
             pub fn top(width: u32, _height: u32, text_width: u32, text_height: u32) -> (u32, u32) {
-                let x = (width / 2) - (text_width / 2);
+                let x = (width / 2).saturating_sub((text_width / 2));
                 let y = {
                     let text_height = text_height as f32;
                     (text_height * 0.2) as u32
@@ -57,7 +57,7 @@ impl Annotation {
                 text_width: u32,
                 text_height: u32,
             ) -> (u32, u32) {
-                let x = (width / 2) - (text_width / 2);
+                let x = (width / 2).saturating_sub((text_width / 2));
                 let y = (height / 2) - (text_height / 2);
 
                 (x, y)
@@ -69,7 +69,7 @@ impl Annotation {
                 text_width: u32,
                 text_height: u32,
             ) -> (u32, u32) {
-                let x = (width / 2) - (text_width / 2);
+                let x = (width / 2).saturating_sub((text_width / 2));
                 let y = {
                     let height = height as f32;
                     let text_height = text_height as f32;
