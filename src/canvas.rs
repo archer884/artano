@@ -47,7 +47,7 @@ impl Canvas {
             &self.overlay,
             self.width,
             self.height,
-            FilterType::CatmullRom,
+            FilterType::Gaussian,
         );
 
         let image = &DynamicImage::ImageRgba8(downsampled_text);

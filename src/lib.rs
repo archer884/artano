@@ -12,8 +12,8 @@ pub use annotation::*;
 pub use canvas::*;
 pub use error::{Result, Error, ErrorKind};
 
-const AA_FACTOR: u32 = 4;
-const AA_FACTOR_FLOAT: f32 = 4.0;
+const AA_FACTOR: u32 = 3;
+const AA_FACTOR_FLOAT: f32 = 3.0;
 
 /// A font to be used with artano's text rendering functions.
 ///
