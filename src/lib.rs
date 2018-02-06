@@ -27,7 +27,7 @@ pub type Typeface = rusttype::Font<'static>;
 /// any TrueType font will work for this purpose, but some ttf files contain multiple fonts, in
 /// which case this function may fail, since it won't know which one to choose. In that event,
 /// it may be necessary to load the font yourself using `rusttype`.
-pub fn load_typeface<R: std::io::Read>(stream: &mut R) -> Result<Typeface> {
+pub fn load_typeface<R: std::io::Read>(mut stream: R) -> Result<Typeface> {
     use rusttype::FontCollection;
 
     let mut buf = Vec::new();

@@ -154,7 +154,7 @@ impl Annotation {
                     let position = self.position(c_width, c_height, text_width, font_height);
                     render_line(
                         right,
-                        (line_offset / 2),
+                        line_offset / 2,
                         position,
                         (text_width, font_height),
                         scale_factor,
