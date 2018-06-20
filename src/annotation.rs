@@ -1,7 +1,7 @@
 use draw;
 use image::{DynamicImage, ImageBuffer, Luma, Rgba};
-use imageproc::{drawing, edges};
 use imageproc::rect::Rect;
+use imageproc::{drawing, edges};
 use rusttype::{Font, Scale};
 
 #[derive(Debug)]
@@ -108,7 +108,7 @@ impl Annotation {
             // This should be all the evidence you require that we have not selected the
             // appropriate level of abstraction.
             //
-            // The most important thing to bear in mind here is that the canvas begins in the 
+            // The most important thing to bear in mind here is that the canvas begins in the
             // TOP LEFT CORNER at 0,0.
             match self.position {
                 Position::Top => {
@@ -218,8 +218,12 @@ fn render_line(
 
     // The final value in the array here is the *opacity* of the pixel. Not the transparency.
     // Apparently, this is not CSS...
-    const WHITE_PIXEL: Rgba<u8> = Rgba { data: [255, 255, 255, 255] };
-    const BLACK_PIXEL: Rgba<u8> = Rgba { data: [0, 0, 0, 255] };
+    const WHITE_PIXEL: Rgba<u8> = Rgba {
+        data: [255, 255, 255, 255],
+    };
+    const BLACK_PIXEL: Rgba<u8> = Rgba {
+        data: [0, 0, 0, 255],
+    };
 
     let (text_width, text_height) = text_dimensions;
     let scale = Scale::uniform(scale_factor * AA_FACTOR_FLOAT);
@@ -232,11 +236,8 @@ fn render_line(
     let y = (y as i32 + y_offset) as u32 * AA_FACTOR;
 
     let edge_canvas_width = text_width * AA_FACTOR;
-    let mut edge_rendering = ImageBuffer::from_pixel(
-        edge_canvas_width,
-        text_height * AA_FACTOR,
-        Luma([0u8]),
-    );
+    let mut edge_rendering =
+        ImageBuffer::from_pixel(edge_canvas_width, text_height * AA_FACTOR, Luma([0u8]));
     draw::text(&mut edge_rendering, Luma([255u8]), 0, 0, scale, font, text);
 
     let edge_rendering = edges::canny(&edge_rendering, 255.0, 255.0);
@@ -264,17 +265,19 @@ fn render_line(
 fn font_height(font: &Font, scale: Scale) -> u32 {
     use rusttype::VMetrics;
 
-    let VMetrics { ascent, descent, .. } = font.v_metrics(scale);
+    let VMetrics {
+        ascent, descent, ..
+    } = font.v_metrics(scale);
     ((ascent - descent) as f32 * 1.1) as u32
 }
 
 fn calculate_text_width(s: &str, font: &Font, scale: Scale) -> u32 {
     // Padding of two is intended to aid in edge detection--mostly beacuse ! does not seem to
     // have an appropriate advance width.
-    2 +
-        font.glyphs_for(s.chars())
-            .map(|glyph| glyph.scaled(scale).h_metrics().advance_width)
-            .sum::<f32>() as u32
+    2 + font
+        .glyphs_for(s.chars())
+        .map(|glyph| glyph.scaled(scale).h_metrics().advance_width)
+        .sum::<f32>() as u32
 }
 
 fn split_text(s: &str) -> (&str, &str) {
@@ -288,8 +291,8 @@ fn split_text(s: &str) -> (&str, &str) {
             Some(s_idx) => {
                 // I wrote this but did not read it, so I hope it's correct.
                 // Edit: of course it's correct. There's a test. Hush, dammit.
-                if (middle_index as i32 - s_idx as i32).abs() >
-                    (middle_index as i32 - idx as i32).abs()
+                if (middle_index as i32 - s_idx as i32).abs()
+                    > (middle_index as i32 - idx as i32).abs()
                 {
                     split_index = Some(idx);
                 } else {
@@ -303,9 +306,8 @@ fn split_text(s: &str) -> (&str, &str) {
     // spaces, but let's just get this working, ok? (For those of you who don't grok what's going
     // on, this throws away the middlemost character in the event that we have not located a
     // middlemost space.)
-    let split_index = split_index.expect(
-        "Wtf, bro?You weren't supposed to call this function if you didn't have a space.",
-    );
+    let split_index = split_index
+        .expect("Wtf, bro?You weren't supposed to call this function if you didn't have a space.");
     (&s[..split_index], &s[(split_index + 1)..])
 }
 
