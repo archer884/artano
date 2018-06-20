@@ -14,6 +14,11 @@ pub struct Canvas {
 }
 
 impl Canvas {
+    /// Creates a new canvas based on a buffer of bytes.
+    /// 
+    /// A canvas consists of both a base layer and an upscaled annotation layer (at 3x the 
+    /// original resolution? Depends on how we count that, I guess...). Text is rendered first
+    /// at this upscaled size and then downsampled onto the background.
     pub fn read_from_buffer(buf: &[u8]) -> Result<Canvas> {
         let base = image::load_from_memory(buf)?;
         let (width, height) = base.dimensions();
@@ -28,6 +33,11 @@ impl Canvas {
         })
     }
 
+    /// Adds an annotation to the canvas.
+    /// 
+    /// This renders the annotation to the upscaled layer of the canvas that will eventually be
+    /// overlaid onto the canvas proper. Text is laid out and drawn at this stage, meaning each
+    /// annotation is individually rendered.
     pub fn add_annotation<'a>(
         &mut self,
         annotation: &Annotation,
@@ -43,6 +53,13 @@ impl Canvas {
         annotation.render_text(&mut self.overlay, font, scale, self.width, self.height);
     }
 
+    /// Produces the final rendering of the canvas.
+    /// 
+    /// This rendering step applies the upscaled overlay to the base canvas, thereby adding the 
+    /// desired text to the image proper. This is done via resizing and then overlaying. It's not
+    /// rocket surgery; the whole process is three lines of code.
+    /// 
+    /// I've added this documentation just as a reminder of what's actually going on here.
     pub fn render(&mut self) {
         let downsampled_text =
             imageops::resize(&self.overlay, self.width, self.height, FilterType::Gaussian);
