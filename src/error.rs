@@ -23,7 +23,11 @@ pub enum ErrorKind {
 }
 
 impl Error {
-    pub fn io<D: Into<Description>, E: error::Error + 'static>(e: E, description: D) -> Error {
+    pub fn io<D, E>(e: E, description: D) -> Error
+    where
+        D: Into<Description>,
+        E: error::Error + 'static,
+    {
         Error {
             kind: ErrorKind::IO,
             description: description.into(),
@@ -31,21 +35,15 @@ impl Error {
         }
     }
 
-    pub fn font<D: Into<Description>>(description: D) -> Error {
+    pub fn font<D, E>(e: E, description: D) -> Error
+    where
+        D: Into<Description>,
+        E: error::Error + 'static,
+    {
         Error {
             kind: ErrorKind::Font,
             description: description.into(),
-            cause: None,
-        }
-    }
-}
-
-impl From<image::ImageError> for Error {
-    fn from(error: image::ImageError) -> Error {
-        Error {
-            kind: ErrorKind::ImageFormat,
-            description: Cow::from("Sorry, we couldn't read this image"),
-            cause: Some(Box::new(error)),
+            cause: Some(Box::new(e)),
         }
     }
 }
@@ -65,6 +63,16 @@ impl error::Error for Error {
         match self.cause {
             None => None,
             Some(ref error) => Some(error.as_ref()),
+        }
+    }
+}
+
+impl From<image::ImageError> for Error {
+    fn from(error: image::ImageError) -> Error {
+        Error {
+            kind: ErrorKind::ImageFormat,
+            description: Cow::from("Sorry, we couldn't read this image"),
+            cause: Some(Box::new(error)),
         }
     }
 }

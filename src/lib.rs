@@ -10,7 +10,7 @@ mod error;
 
 pub use annotation::*;
 pub use canvas::*;
-pub use error::{Result, Error, ErrorKind};
+pub use error::{Error, ErrorKind, Result};
 
 const AA_FACTOR: u32 = 3;
 const AA_FACTOR_FLOAT: f32 = 3.0;
@@ -31,11 +31,11 @@ pub fn load_typeface<R: std::io::Read>(mut stream: R) -> Result<Typeface> {
     use rusttype::FontCollection;
 
     let mut buf = Vec::new();
-    stream.read_to_end(&mut buf).map_err(|e| {
-        Error::io(e, "Unable to read font stream")
-    })?;
+    stream
+        .read_to_end(&mut buf)
+        .map_err(|e| Error::io(e, "Unable to read font stream"))?;
 
-    FontCollection::from_bytes(buf).into_font().ok_or_else(|| {
-        Error::font("Unable to find a font in font data")
-    })
+    FontCollection::from_bytes(buf)
+        .and_then(FontCollection::into_font)
+        .map_err(|e| Error::font(e, "Unable to read font from data"))
 }

@@ -1,6 +1,6 @@
 [package]
 name = "artano"
-version = "0.2.4"
+version = "0.2.6"
 authors = ["J/A <archer884@gmail.com>"]
 license = "MIT/Apache-2.0"
 keywords = ["image", "image-manipulation", "meme", "pepe", "kek"]
@@ -15,6 +15,6 @@ Adds text to pictures.
 
 [dependencies]
 conv = "0.3"
-image = "0.17"
-imageproc = "0.12"
-rusttype = "0.3"
+image = "0.19"
+imageproc = "0.15"
+rusttype = "0.6"

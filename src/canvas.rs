@@ -1,6 +1,6 @@
 use annotation::Annotation;
 use error::Result;
-use image::{self, DynamicImage, FilterType, GenericImage, ImageFormat, imageops, RgbaImage};
+use image::{self, imageops, DynamicImage, FilterType, GenericImage, ImageOutputFormat, RgbaImage};
 use rusttype::Font;
 use std::io;
 
@@ -19,9 +19,10 @@ impl Canvas {
         let (width, height) = base.dimensions();
         Ok(Canvas {
             base,
-            overlay: DynamicImage::ImageRgba8(
-                RgbaImage::new(width * AA_FACTOR, height * AA_FACTOR),
-            ),
+            overlay: DynamicImage::ImageRgba8(RgbaImage::new(
+                width * AA_FACTOR,
+                height * AA_FACTOR,
+            )),
             width,
             height,
         })
@@ -43,26 +44,22 @@ impl Canvas {
     }
 
     pub fn render(&mut self) {
-        let downsampled_text = imageops::resize(
-            &self.overlay,
-            self.width,
-            self.height,
-            FilterType::Gaussian,
-        );
+        let downsampled_text =
+            imageops::resize(&self.overlay, self.width, self.height, FilterType::Gaussian);
 
         let image = &DynamicImage::ImageRgba8(downsampled_text);
         imageops::overlay(&mut self.base, image, 0, 0);
     }
 
     pub fn save_jpg<W: io::Write>(&self, stream: &mut W) -> io::Result<()> {
-        self.base.save(stream, ImageFormat::JPEG).map_err(|e| {
-            io::Error::new(io::ErrorKind::Other, e)
-        })
+        self.base
+            .write_to(stream, ImageOutputFormat::JPEG(100))
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 
     pub fn save_png<W: io::Write>(&self, stream: &mut W) -> io::Result<()> {
-        self.base.save(stream, ImageFormat::PNG).map_err(|e| {
-            io::Error::new(io::ErrorKind::Other, e)
-        })
+        self.base
+            .write_to(stream, ImageOutputFormat::PNG)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 }

@@ -3,7 +3,6 @@ use image::{GenericImage, Pixel};
 use imageproc::definitions::Clamp;
 use rusttype::{self, Font, Scale};
 
-
 pub fn text<'a, I>(
     image: &'a mut I,
     color: I::Pixel,
