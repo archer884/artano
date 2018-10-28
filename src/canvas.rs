@@ -1,6 +1,6 @@
 use annotation::Annotation;
 use error::Result;
-use image::{self, imageops, DynamicImage, FilterType, GenericImage, ImageOutputFormat, RgbaImage};
+use image::{self, imageops, DynamicImage, FilterType, GenericImageView, ImageOutputFormat, RgbaImage};
 use rusttype::Font;
 use std::io;
 
