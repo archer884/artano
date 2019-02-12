@@ -1,6 +1,5 @@
-use draw;
+use crate::draw;
 use image::{DynamicImage, ImageBuffer, Luma, Rgba};
-use imageproc::rect::Rect;
 use imageproc::{drawing, edges};
 use rusttype::{Font, Scale};
 
@@ -213,8 +212,7 @@ fn render_line(
     font: &Font,
     pixels: &mut DynamicImage,
 ) {
-    use AA_FACTOR;
-    use AA_FACTOR_FLOAT;
+    use crate::{AA_FACTOR, AA_FACTOR_FLOAT};
 
     // The final value in the array here is the *opacity* of the pixel. Not the transparency.
     // Apparently, this is not CSS...
@@ -252,11 +250,9 @@ fn render_line(
             (x, y)
         });
 
-    let rect_size = (0.1 * scale_factor * 2.2) as u32;
-    let offset = (rect_size / 2) as i32;
+    let radius = (0.09 * scale_factor) as i32;
     for (x, y) in edge_pixels {
-        let rect = Rect::at(x as i32 - offset, y as i32 - offset).of_size(rect_size, rect_size);
-        drawing::draw_hollow_rect_mut(pixels, rect, BLACK_PIXEL);
+        drawing::draw_hollow_circle_mut(pixels, (x as i32, y as i32), radius, BLACK_PIXEL);
     }
 
     draw::text(pixels, WHITE_PIXEL, x, y, scale, font, text);
@@ -307,7 +303,8 @@ fn split_text(s: &str) -> (&str, &str) {
     // on, this throws away the middlemost character in the event that we have not located a
     // middlemost space.)
     let split_index = split_index
-        .expect("Wtf, bro?You weren't supposed to call this function if you didn't have a space.");
+        .expect("Wtf, bro? You weren't supposed to call this function if you didn't have a space.");
+
     (&s[..split_index], &s[(split_index + 1)..])
 }
 

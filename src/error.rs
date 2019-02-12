@@ -1,4 +1,3 @@
-use image;
 use std::borrow::Cow;
 use std::error;
 use std::fmt;
@@ -55,11 +54,7 @@ impl fmt::Display for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        &self.description
-    }
-
-    fn cause(&self) -> Option<&error::Error> {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self.cause {
             None => None,
             Some(ref error) => Some(error.as_ref()),

@@ -1,10 +1,9 @@
-use annotation::Annotation;
-use error::Result;
-use image::{self, imageops, DynamicImage, FilterType, GenericImageView, ImageOutputFormat, RgbaImage};
+use crate::{annotation::Annotation, error::Result, AA_FACTOR};
+use image::{
+    self, imageops, DynamicImage, FilterType, GenericImageView, ImageOutputFormat, RgbaImage,
+};
 use rusttype::Font;
 use std::io;
-
-use AA_FACTOR;
 
 pub struct Canvas {
     base: DynamicImage,
@@ -15,8 +14,8 @@ pub struct Canvas {
 
 impl Canvas {
     /// Creates a new canvas based on a buffer of bytes.
-    /// 
-    /// A canvas consists of both a base layer and an upscaled annotation layer (at 3x the 
+    ///
+    /// A canvas consists of both a base layer and an upscaled annotation layer (at 3x the
     /// original resolution? Depends on how we count that, I guess...). Text is rendered first
     /// at this upscaled size and then downsampled onto the background.
     pub fn read_from_buffer(buf: &[u8]) -> Result<Canvas> {
@@ -34,7 +33,7 @@ impl Canvas {
     }
 
     /// Adds an annotation to the canvas.
-    /// 
+    ///
     /// This renders the annotation to the upscaled layer of the canvas that will eventually be
     /// overlaid onto the canvas proper. Text is laid out and drawn at this stage, meaning each
     /// annotation is individually rendered.
@@ -54,11 +53,11 @@ impl Canvas {
     }
 
     /// Produces the final rendering of the canvas.
-    /// 
-    /// This rendering step applies the upscaled overlay to the base canvas, thereby adding the 
+    ///
+    /// This rendering step applies the upscaled overlay to the base canvas, thereby adding the
     /// desired text to the image proper. This is done via resizing and then overlaying. It's not
     /// rocket surgery; the whole process is three lines of code.
-    /// 
+    ///
     /// I've added this documentation just as a reminder of what's actually going on here.
     pub fn render(&mut self) {
         let downsampled_text =
