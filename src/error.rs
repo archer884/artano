@@ -3,8 +3,8 @@ use std::error;
 use std::fmt;
 use std::result;
 
-pub type Result<T> = result::Result<T, Error>;
-pub type Cause = Option<Box<error::Error>>;
+pub type Result<T, E = Error> = result::Result<T, E>;
+pub type Cause = Option<Box<dyn error::Error + 'static>>;
 pub type Description = Cow<'static, str>;
 
 #[derive(Debug)]

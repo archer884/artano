@@ -216,12 +216,8 @@ fn render_line(
 
     // The final value in the array here is the *opacity* of the pixel. Not the transparency.
     // Apparently, this is not CSS...
-    const WHITE_PIXEL: Rgba<u8> = Rgba {
-        data: [255, 255, 255, 255],
-    };
-    const BLACK_PIXEL: Rgba<u8> = Rgba {
-        data: [0, 0, 0, 255],
-    };
+    const WHITE_PIXEL: Rgba<u8> = Rgba([255, 255, 255, 255]);
+    const BLACK_PIXEL: Rgba<u8> = Rgba([0, 0, 0, 255]);
 
     let (text_width, text_height) = text_dimensions;
     let scale = Scale::uniform(scale_factor * AA_FACTOR_FLOAT);
