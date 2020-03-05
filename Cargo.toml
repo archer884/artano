@@ -16,6 +16,6 @@ Adds text to pictures.
 
 [dependencies]
 conv = "0.3"
-image = "0.22"
-imageproc = "0.19"
+image = "0.23"
+imageproc = "0.20"
 rusttype = "0.8"

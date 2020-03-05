@@ -1,7 +1,5 @@
 use crate::{annotation::Annotation, error::Result, AA_FACTOR};
-use image::{
-    self, imageops, DynamicImage, FilterType, GenericImageView, ImageOutputFormat, RgbaImage,
-};
+use image::{self, imageops, DynamicImage, GenericImageView, ImageOutputFormat, RgbaImage};
 use rusttype::Font;
 use std::io;
 
@@ -60,8 +58,12 @@ impl Canvas {
     ///
     /// I've added this documentation just as a reminder of what's actually going on here.
     pub fn render(&mut self) {
-        let downsampled_text =
-            imageops::resize(&self.overlay, self.width, self.height, FilterType::Gaussian);
+        let downsampled_text = imageops::resize(
+            &self.overlay,
+            self.width,
+            self.height,
+            imageops::FilterType::Gaussian,
+        );
 
         let image = &DynamicImage::ImageRgba8(downsampled_text);
         imageops::overlay(&mut self.base, image, 0, 0);
@@ -69,13 +71,13 @@ impl Canvas {
 
     pub fn save_jpg<W: io::Write>(&self, stream: &mut W) -> io::Result<()> {
         self.base
-            .write_to(stream, ImageOutputFormat::JPEG(100))
+            .write_to(stream, ImageOutputFormat::Jpeg(100))
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 
     pub fn save_png<W: io::Write>(&self, stream: &mut W) -> io::Result<()> {
         self.base
-            .write_to(stream, ImageOutputFormat::PNG)
+            .write_to(stream, ImageOutputFormat::Png)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 }
