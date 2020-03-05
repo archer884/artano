@@ -62,7 +62,7 @@ impl Canvas {
             &self.overlay,
             self.width,
             self.height,
-            imageops::FilterType::Gaussian,
+            imageops::FilterType::Lanczos3,
         );
 
         let image = &DynamicImage::ImageRgba8(downsampled_text);
