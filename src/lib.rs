@@ -6,7 +6,7 @@ mod error;
 pub use annotation::*;
 pub use canvas::*;
 pub use error::Error;
-use rusttype::Font;
+pub use rusttype::Font;
 
 const AA_FACTOR: u32 = 3;
 const AA_FACTOR_FLOAT: f32 = 3.0;
