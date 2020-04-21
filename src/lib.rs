@@ -26,19 +26,16 @@ pub fn load_font<'a>(name: &str) -> Result<Font<'a>> {
     // no way of knowing that for sure. Thank God for documentation, right? On Windows, the Path
     // variant is definitely the one exercised.
     let font = match font {
-        Handle::Path { path, font_index } => load_from_bytes(std::fs::read(path)?, font_index),
+        Handle::Path { path, font_index } => {
+            Font::try_from_vec_and_index(std::fs::read(path)?, font_index)
+        }
         Handle::Memory { bytes, font_index } => {
             // Sharing font data sucks.
-            let font_data: Vec<_> = bytes.iter().cloned().collect();
-            load_from_bytes(font_data, font_index)
+            Font::try_from_vec_and_index(bytes.iter().cloned().collect(), font_index)
         }
     };
 
     font.ok_or_else(|| Error::Font(name.into()))
-}
-
-fn load_from_bytes<'a>(bytes: Vec<u8>, idx: u32) -> Option<Font<'a>> {
-    Font::try_from_vec_and_index(bytes, idx)
 }
 
 #[test]
