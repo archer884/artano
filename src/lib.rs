@@ -5,32 +5,43 @@ mod error;
 
 pub use annotation::*;
 pub use canvas::*;
-pub use error::{Error, ErrorKind, Result};
+pub use error::Error;
+use rusttype::Font;
 
 const AA_FACTOR: u32 = 3;
 const AA_FACTOR_FLOAT: f32 = 3.0;
 
-/// A font to be used with artano's text rendering functions.
+pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+/// Load a font face by name.
 ///
-/// Artano is perfectly happy to accept `Font<'a>` provided that `'a` is a sufficient lifetime,
-/// but I find the lifetime annoying to work with, so I'm kind of aliasing it away...
-pub type Typeface = rusttype::Font<'static>;
+/// This will work only if your system actually has a font of the given name. Unfortunately,
+/// licensing restrictions on fonts pretty much require this kind of nonsense.
+pub fn load_font<'a>(name: &str) -> Result<Font<'a>> {
+    use font_kit::{handle::Handle, source::SystemSource};
 
-/// Create a typeface based on font data.
-///
-/// This data will be found in a file like `Impact.ttf` somewhere on the host system. In theory,
-/// any TrueType font will work for this purpose, but some ttf files contain multiple fonts, in
-/// which case this function may fail, since it won't know which one to choose. In that event,
-/// it may be necessary to load the font yourself using `rusttype`.
-pub fn load_typeface<R: std::io::Read>(mut stream: R) -> Result<Typeface> {
-    use rusttype::FontCollection;
+    let font = SystemSource::new().select_by_postscript_name(name)?;
 
-    let mut buf = Vec::new();
-    stream
-        .read_to_end(&mut buf)
-        .map_err(|e| Error::io(e, "Unable to read font stream"))?;
+    // I have a sneaking suspicion that only one of these paths will ever be exercised, but I have
+    // no way of knowing that for sure. Thank God for documentation, right? On Windows, the Path
+    // variant is definitely the one exercised.
+    let font = match font {
+        Handle::Path { path, font_index } => load_from_bytes(std::fs::read(path)?, font_index),
+        Handle::Memory { bytes, font_index } => {
+            // Sharing font data sucks.
+            let font_data: Vec<_> = bytes.iter().cloned().collect();
+            load_from_bytes(font_data, font_index)
+        }
+    };
 
-    FontCollection::from_bytes(buf)
-        .and_then(FontCollection::into_font)
-        .map_err(|e| Error::font(e, "Unable to read font from data"))
+    font.ok_or_else(|| Error::Font(name.into()))
+}
+
+fn load_from_bytes<'a>(bytes: Vec<u8>, idx: u32) -> Option<Font<'a>> {
+    Font::try_from_vec_and_index(bytes, idx)
+}
+
+#[test]
+fn test_impact() {
+    let _font = load_font("Impact").unwrap();
 }

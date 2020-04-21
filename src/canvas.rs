@@ -1,4 +1,4 @@
-use crate::{annotation::Annotation, error::Result, AA_FACTOR};
+use crate::{annotation::Annotation, Result, AA_FACTOR};
 use image::{self, imageops, DynamicImage, GenericImageView, ImageOutputFormat, RgbaImage};
 use rusttype::Font;
 use std::io;
