@@ -17,21 +17,21 @@ pub enum Position {
 }
 
 impl Annotation {
-    pub fn top<T: Into<String>>(text: T) -> Annotation {
+    pub fn top(text: impl Into<String>) -> Annotation {
         Annotation {
             text: text.into(),
             position: Position::Top,
         }
     }
 
-    pub fn middle<T: Into<String>>(text: T) -> Annotation {
+    pub fn middle(text: impl Into<String>) -> Annotation {
         Annotation {
             text: text.into(),
             position: Position::Middle,
         }
     }
 
-    pub fn bottom<T: Into<String>>(text: T) -> Annotation {
+    pub fn bottom(text: impl Into<String>) -> Annotation {
         Annotation {
             text: text.into(),
             position: Position::Bottom,
