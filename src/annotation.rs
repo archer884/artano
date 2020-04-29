@@ -3,7 +3,7 @@ use image::{DynamicImage, ImageBuffer, Luma, Rgba};
 use imageproc::{drawing, edges};
 use rusttype::{Font, Scale};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Annotation {
     pub text: String,
     pub position: Position,
