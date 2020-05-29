@@ -20,7 +20,9 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub fn load_font<'a>(name: &str) -> Result<Font<'a>> {
     use font_kit::{handle::Handle, source::SystemSource};
 
-    let font = SystemSource::new().select_by_postscript_name(name)?;
+    let font = SystemSource::new()
+        .select_by_postscript_name(name)
+        .map_err(|_| Error::Font(name.into()))?;
 
     // I have a sneaking suspicion that only one of these paths will ever be exercised, but I have
     // no way of knowing that for sure. Thank God for documentation, right? On Windows, the Path
