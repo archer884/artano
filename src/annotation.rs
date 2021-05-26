@@ -1,7 +1,8 @@
-use crate::draw;
 use image::{DynamicImage, ImageBuffer, Luma, Rgba};
 use imageproc::{drawing, edges};
 use rusttype::{Font, Scale};
+
+use crate::draw;
 
 #[derive(Clone, Debug)]
 pub struct Annotation {
@@ -298,6 +299,8 @@ fn split_text(s: &str) -> (&str, &str) {
     // spaces, but let's just get this working, ok? (For those of you who don't grok what's going
     // on, this throws away the middlemost character in the event that we have not located a
     // middlemost space.)
+    //
+    // Edit: see "solution" below. KABOOM.
     let split_index = split_index
         .expect("Wtf, bro? You weren't supposed to call this function if you didn't have a space.");
 

@@ -1,5 +1,6 @@
-use font_kit::error::SelectionError;
 use std::{error, fmt, io};
+
+use font_kit::error::SelectionError;
 
 #[derive(Debug)]
 pub enum Error {

@@ -1,7 +1,9 @@
-use crate::{annotation::Annotation, Result, AA_FACTOR};
+use std::io;
+
 use image::{self, imageops, DynamicImage, GenericImageView, ImageOutputFormat, RgbaImage};
 use rusttype::Font;
-use std::io;
+
+use crate::{annotation::Annotation, Result, AA_FACTOR};
 
 pub struct Canvas {
     base: DynamicImage,
