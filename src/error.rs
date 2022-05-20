@@ -16,7 +16,7 @@ impl fmt::Display for Error {
             Error::IO(e) => e.fmt(f),
             Error::Image(e) => e.fmt(f),
             Error::FontSelection(e) => e.fmt(f),
-            Error::Font(name) => write!(f, "Font {:?} not found", name),
+            Error::Font(name) => write!(f, "Font {name:?} not found"),
         }
     }
 }

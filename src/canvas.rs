@@ -71,13 +71,13 @@ impl Canvas {
         imageops::overlay(&mut self.base, image, 0, 0);
     }
 
-    pub fn save_jpg(&self, stream: &mut impl io::Write) -> io::Result<()> {
+    pub fn save_jpg(&self, stream: &mut (impl io::Write + io::Seek)) -> io::Result<()> {
         self.base
             .write_to(stream, ImageOutputFormat::Jpeg(100))
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 
-    pub fn save_png(&self, stream: &mut impl io::Write) -> io::Result<()> {
+    pub fn save_png(&self, stream: &mut (impl io::Write + io::Seek)) -> io::Result<()> {
         self.base
             .write_to(stream, ImageOutputFormat::Png)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
