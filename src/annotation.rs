@@ -261,7 +261,7 @@ fn font_height(font: &Font, scale: Scale) -> u32 {
     let VMetrics {
         ascent, descent, ..
     } = font.v_metrics(scale);
-    ((ascent - descent) as f32 * 1.1) as u32
+    ((ascent - descent) * 1.1) as u32
 }
 
 fn calculate_text_width(s: &str, font: &Font, scale: Scale) -> u32 {
