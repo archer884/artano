@@ -1,6 +1,6 @@
 use std::io;
 
-use image::{self, imageops, DynamicImage, GenericImageView, ImageOutputFormat, RgbaImage};
+use image::{self, imageops, DynamicImage, GenericImageView, ImageFormat, RgbaImage};
 use rusttype::Font;
 
 use crate::{annotation::Annotation, Result, AA_FACTOR};
@@ -73,13 +73,13 @@ impl Canvas {
 
     pub fn save_jpg(&self, stream: &mut (impl io::Write + io::Seek)) -> io::Result<()> {
         self.base
-            .write_to(stream, ImageOutputFormat::Jpeg(100))
+            .write_to(stream, ImageFormat::Jpeg)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 
     pub fn save_png(&self, stream: &mut (impl io::Write + io::Seek)) -> io::Result<()> {
         self.base
-            .write_to(stream, ImageOutputFormat::Png)
+            .write_to(stream, ImageFormat::Png)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
     }
 }
