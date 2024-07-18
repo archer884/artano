@@ -37,12 +37,7 @@ impl Canvas {
     /// This renders the annotation to the upscaled layer of the canvas that will eventually be
     /// overlaid onto the canvas proper. Text is laid out and drawn at this stage, meaning each
     /// annotation is individually rendered.
-    pub fn add_annotation<'a>(
-        &mut self,
-        annotation: &Annotation,
-        font: &Font<'a>,
-        scale_multiplier: f32,
-    ) {
+    pub fn add_annotation(&mut self, annotation: &Annotation, font: &Font, scale_multiplier: f32) {
         // Font scale is, in fact, the height in pixels of each glyph. Here we set that to be
         // one tenth the height of the image itself modified by the scale multiplier provided
         // by the user. The multiplier serves to allow us to shrink or expand text to fit images

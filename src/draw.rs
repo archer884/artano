@@ -1,5 +1,4 @@
-use conv::ValueInto;
-use image::{GenericImage, Pixel};
+use image::{GenericImage, GenericImageView, Pixel};
 use imageproc::definitions::Clamp;
 use rusttype::{self, Font, Scale};
 
@@ -12,8 +11,8 @@ pub fn text<'a, I>(
     font: &'a Font<'a>,
     text: &'a str,
 ) where
-    I: GenericImage,
-    <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
+    I: GenericImage + GenericImageView,
+    <<I as GenericImageView>::Pixel as Pixel>::Subpixel: Into<f32> + Clamp<f32>,
 {
     use imageproc::pixelops;
 
