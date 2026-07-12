@@ -4,7 +4,7 @@ use image::{self, imageops, DynamicImage, GenericImageView, ImageFormat, RgbaIma
 use rusttype::Font;
 
 use crate::annotation::Annotation;
-use crate::legacy;
+use crate::outline;
 use crate::Result;
 use crate::AA_FACTOR;
 
@@ -143,7 +143,7 @@ fn render_line_to_small_buffer(
 
     let mut buffer = DynamicImage::ImageRgba8(RgbaImage::new(buf_w, buf_h));
 
-    legacy::render_line(
+    outline::render_line(
         text,
         0,
         (pad / AA_FACTOR, pad / AA_FACTOR),
