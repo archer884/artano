@@ -83,6 +83,22 @@ fn main() {
             height: 2160,
             annotations: vec![Annotation::top("HELLO WORLD")],
         },
+        Case {
+            name: "hd_many_annotations",
+            width: 1920,
+            height: 1080,
+            annotations: (0..10)
+                .map(|i| Annotation::top(format!("CAPTION NUMBER {}", i)))
+                .collect(),
+        },
+        Case {
+            name: "4k_many_annotations",
+            width: 3840,
+            height: 2160,
+            annotations: (0..10)
+                .map(|i| Annotation::top(format!("CAPTION NUMBER {}", i)))
+                .collect(),
+        },
     ];
 
     println!("\n=== artano benchmark (current implementation) ===\n");
@@ -124,9 +140,7 @@ fn run(image_bytes: &[u8], annotations: &[Annotation], font: &Font) -> Timing {
     let t_read = t_total_start.elapsed();
 
     let t_annotate_start = Instant::now();
-    for ann in annotations {
-        canvas.add_annotation(ann, font, 1.0);
-    }
+    canvas.add_annotations(annotations, font, 1.0);
     let t_annotate = t_annotate_start.elapsed();
 
     let t_render_start = Instant::now();

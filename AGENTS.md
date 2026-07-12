@@ -9,7 +9,8 @@ for "High Smith"), per the author's sense of humor.
 - **Crate:** `artano` v0.3.14, edition 2024, dual-licensed MIT/Apache-2.0
 - **Purpose:** Render an image with caption text overlaid in the classic
   white-on-black-outline meme style.
-- **Backbone:** `image` 0.25, `imageproc` 0.27, `rusttype` 0.9, `font-kit` 0.14
+- **Backbone:** `image` 0.25, `imageproc` 0.27, `rusttype` 0.9,
+  `font-kit` 0.14, `rayon` 1.12 (parallel annotation + resize)
 - **Test surface:** Tiny — one `load_font("Impact")` smoke test, one
   `split_text` test, no integration tests, no fixtures.
 - **Dev tools:** `examples/benchmark.rs` (read/annotate/render/total
@@ -22,21 +23,16 @@ for "High Smith"), per the author's sense of humor.
 Re-exports everything from the submodules plus `rusttype::Font`:
 
 - `Canvas` (`src/canvas.rs`) — the main entry point. Holds a base image
-  and a `Vec<RenderedLayer>` of small text-bbox buffers; `render()`
-  resizes each layer individually rather than the whole image.
+  and a `Vec<RenderedLayer>` of small text-bbox buffers. `add_annotation`
+  / `add_annotations` produce the layers, `render()` resizes each in
+  parallel via rayon and composites onto the base.
 - `Annotation`, `Position::{Top,Middle,Bottom}`, `PlacedLine`
   (`src/annotation.rs`) — text + vertical placement, plus a pure
   `Annotation::layout()` that returns `Vec<PlacedLine>` (no rendering).
 - `Error` (`src/error.rs`) — wraps `io::Error`, `image::ImageError`,
   `font_kit::SelectionError`, and a stringly-typed font-not-found variant.
-- `outline` (`src/outline.rs`, `pub`) — the current outline renderer
+- `outline` (`src/outline.rs`, `pub`) — the outline renderer
   (text + black halo via a single morphology dilate).
-- `legacy` (`src/legacy.rs`, `pub`) — the *original* (pre-refactor)
-  pipeline preserved verbatim: one full-image 3× overlay, Canny edge
-  detection + per-pixel hollow circles for the outline, one big
-  Lanczos3 resize. `legacy::render(bytes, &[Annotation], &Font) -> Result<DynamicImage>`
-  reproduces the pre-refactor behavior end-to-end. The diff binary
-  uses it as the reference for visual comparison.
 - `load_font(name: &str) -> Result<Font>` — loads a system font by
   PostScript name via `font-kit`. Expects Impact to be installed (the
   only test asserts this on the host).
@@ -49,10 +45,13 @@ Re-exports everything from the submodules plus `rusttype::Font`:
 
 1. `Canvas::read_from_buffer(&[u8])` decodes an image (any format `image`
    supports) into `base`, with `layers: Vec<RenderedLayer>` empty.
-2. `Canvas::add_annotation(&annotation, &font, scale_multiplier)` lays
-   out the text at `height/10 * scale_multiplier` glyph height. The
-   layout (splitting, line offsets per `Position` variant) lives in
+2. `Canvas::add_annotations(&[Annotation], &Font, scale_multiplier)` (or
+   the single-shot `add_annotation` for one annotation) lays out the
+   text at `height/10 * scale_multiplier` glyph height. The layout
+   (splitting, line offsets per `Position` variant) lives in
    `Annotation::layout` and returns `Vec<PlacedLine>` — pure, no drawing.
+   The batch form parallelizes layout + small-buffer rendering with
+   rayon.
 3. For each `PlacedLine`, `render_line_to_small_buffer` (in
    `src/canvas.rs`) allocates a small RGBA buffer sized to
    `(text_width * AA_FACTOR + 2*pad, text_height * AA_FACTOR + 2*pad)`
@@ -61,42 +60,28 @@ Re-exports everything from the submodules plus `rusttype::Font`:
    output radius (9 input pixels at 3×). `outline::render_line` then
    produces text + outline into that buffer; the layer is pushed to
    `self.layers`.
-4. `outline::render_line` (the current path):
+4. `outline::render_line`:
    1. Draw the text mask (white text on black) at 3× into a `GrayImage`.
    2. Build a 1-pixel-thick **ring** mask at the outline radius
       `(0.09 * scale_factor) as i32`.
    3. `imageproc::morphology::grayscale_dilate(text_mask, ring_mask)` →
-      a 1-pixel ring at that radius. Same math as the old
+      a 1-pixel ring at that radius. Same math as the original
       `draw_hollow_circle_mut`-per-edge-pixel approach, but one dilate
       pass over the whole buffer.
    4. Stamp the ring as opaque black into the small buffer.
    5. Draw the white text on top via `draw::text` (weighted blend, so
       the AA edges transition smoothly out of the black outline).
-5. `Canvas::render()` pops each layer, `imageops::resize`s it from
-   `AA_FACTOR`× down via Lanczos3, and `imageops::overlay`s it onto
-   `base` at `(line.x - pad/AA_FACTOR, line.y - pad/AA_FACTOR)` so the
-   text lands at the original `(x, y)` and the outline extends ~3 px
+5. `Canvas::render()` resizes each layer in parallel via rayon (the
+   resize is independent per layer), then composites each layer in
+   order onto the base. The composite is serial because every layer's
+   overlay writes to the same `self.base`. The text lands at
+   `(line.x - pad/AA_FACTOR, line.y - pad/AA_FACTOR)` so the text
+   appears at the original `(x, y)` with the outline extending ~3 px
    outside the text bbox in each direction.
 6. `Canvas::save_jpg` / `save_png` write the result.
 
-Note `Canvas` is mutated through `&mut self` for both `add_annotation`
+Note `Canvas` is mutated through `&mut self` for both `add_annotation(s)`
 and `render`.
-
-## The legacy pipeline (kept for diffing)
-
-`legacy::render` runs the *original* path end-to-end:
-- One `RgbaImage` sized to `(width * AA_FACTOR, height * AA_FACTOR)`.
-- Each annotation's text + outline is drawn into that overlay via
-  `legacy::render_line` — Canny edge detection on a 3× Luma buffer,
-  then `draw_hollow_circle_mut` at every edge pixel with radius
-  `(0.09 * scale_factor)`, then white text on top.
-- One `imageops::resize` of the whole 3× overlay with Lanczos3, then
-  `imageops::overlay` onto the base.
-
-The `examples/diff.rs` binary calls `legacy::render` for `render_b` and
-the current `Canvas` API for `render_a`; on the same input the diff
-should be effectively zero (sub-pixel rounding from the dilate
-discretization). See "Common tasks" below for the exact command.
 
 ## Common tasks
 
@@ -104,8 +89,8 @@ discretization). See "Common tasks" below for the exact command.
   `src/annotation.rs`, add a constructor and a `position::*` helper,
   then add a match arm in `Annotation::layout` (the three existing
   arms already call `PlacedLine { ... y: pos.1 + line_offset, ... }`
-  with different `line_offset`s when text is split). `Position::position()`
-  is now `pub` so it can be reused outside this module.
+  with different `line_offset`s when text is split). `Annotation::position`
+  is `pub` so it can be reused outside this module.
 - **Tweak the outline**: `outline::render_line` in `src/outline.rs` is
   the only place. The ring-kernel radius formula is
   `(0.09 * scale_factor) as i32`. The padding in
@@ -138,15 +123,20 @@ The Impact font test will fail on systems without Impact installed
 (most Linux). That's expected — it's a smoke test, not a CI gate
 worth chasing. On macOS it's preinstalled.
 
+The diff binary's `render_b` is currently a copy of `render_a` (a
+sanity check that the pipeline is self-consistent, diff should be 0).
+Swap in a different rendering path there to compare against it in the
+future.
+
 ## Repo layout
 
 ```
-Cargo.toml              package + deps
+Cargo.toml              package + deps (incl. rayon)
 src/lib.rs              module wiring, load_font, Result alias, AA constants
-src/canvas.rs           Canvas: base + Vec<RenderedLayer>, per-layer render
+src/canvas.rs           Canvas: base + Vec<RenderedLayer>, per-layer parallel render
 src/annotation.rs       Annotation, Position, pure layout() -> Vec<PlacedLine>
-src/outline.rs          current outline: text mask + 1-px ring dilate
-src/legacy.rs           original pipeline (one 3× overlay + Canny + circles)
+                        + private text-metric helpers (font_height, calculate_text_width, split_text)
+src/outline.rs          outline: text mask + 1-px ring dilate
 src/draw.rs             thin wrapper over rusttype's glyph draw loop with weighted blending
 src/error.rs            Error enum + From impls
 examples/benchmark.rs   read/annotate/render/total timings
@@ -159,8 +149,8 @@ AGENTS.md               this file
 - **`AA_FACTOR` lives in two forms** (`u32` and `f32`) because it's
   used in both integer pixel math and float `Scale` math. If you
   change one, change both.
-- **`legacy::split_text` panics** with `"Wtf, bro?..."` if the input has
-  no space. The caller in `Annotation::layout` already guards on
+- **`split_text` panics** with `"Wtf, bro?..."` if the input has no
+  space. The caller in `Annotation::layout` already guards on
   `self.text.contains(' ')`, so the panic is unreachable in practice —
   but if you refactor, preserve that invariant or replace the panic
   with a real error.
@@ -178,6 +168,15 @@ AGENTS.md               this file
   to a multiple of `AA_FACTOR` so the 3× resize and the composite
   offset come out exact. Both the outline and the resize kernel need
   to fit inside this pad or you get clipping at the AA edges.
+- **`render()` parallelizes the resize but not the composite.** The
+  composite has to be serial (every layer writes to the same `base`).
+  For a single annotation this is essentially free; for many
+  annotations, the resize work fans out across cores and the composite
+  is the remaining serial step.
+- **The 1-annotation `add_annotation` is intentionally serial.** It
+  avoids rayon's work-distribution overhead for the common case. Use
+  `add_annotations` (the batch form) when you have more than one
+  annotation and want the parallel path.
 - **`Cargo.lock` is gitignored** (unusual for a binary-adjacent lib,
   but the author prefers it that way for libraries).
 - **Edition is 2024** — requires a recent rustc (1.85+). The

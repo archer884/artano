@@ -76,29 +76,96 @@ impl Canvas {
         }
     }
 
+    /// Add several annotations at once, rendering them in parallel with rayon.
+    /// Each annotation's layout + per-line rendering is fully independent
+    /// (it allocates its own small buffer, so the only shared state is
+    /// the read-only `font`, `self.width`, and `self.height`), so the
+    /// work fans out across the thread pool. The final `render()` step
+    /// stays serial because all the produced layers need to be composited
+    /// onto the same base image.
+    ///
+    /// For a single annotation, prefer `add_annotation` — it skips rayon's
+    /// work-distribution overhead.
+    pub fn add_annotations(
+        &mut self,
+        annotations: &[Annotation],
+        font: &Font,
+        scale_multiplier: f32,
+    ) {
+        use rayon::prelude::*;
+
+        let scale_factor = (self.height as f32 / 10.0) * scale_multiplier;
+        let (canvas_w, canvas_h) = (self.width, self.height);
+
+        let new_layers: Vec<RenderedLayer> = annotations
+            .par_iter()
+            .map(|annotation| {
+                let lines = annotation.layout(font, scale_factor, canvas_w, canvas_h);
+                lines
+                    .into_iter()
+                    .map(|line| {
+                        let (buffer, pad) = render_line_to_small_buffer(
+                            &line.text,
+                            font,
+                            scale_factor,
+                            line.width,
+                            line.height,
+                        );
+                        RenderedLayer {
+                            buffer,
+                            x: line.x,
+                            y: line.y,
+                            pad,
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .flatten()
+            .collect();
+
+        self.layers.extend(new_layers);
+    }
+
     /// Produces the final rendering of the canvas.
     ///
     /// Each layer is Lanczos3-resized by `AA_FACTOR` (only over the
     /// text-bbox-sized region it covers, not the whole image) and
     /// composited onto the base at the annotation's position.
+    ///
+    /// The resize step is parallelized with rayon — every layer's resize
+    /// is independent. The composite step stays serial because every
+    /// layer's overlay writes to the same `self.base`.
     pub fn render(&mut self) {
+        use rayon::prelude::*;
+
         let layers = std::mem::take(&mut self.layers);
-        for layer in layers {
-            let (w, h) = layer.buffer.dimensions();
-            let downsampled = imageops::resize(
-                &layer.buffer,
-                w / AA_FACTOR,
-                h / AA_FACTOR,
-                imageops::FilterType::Lanczos3,
-            );
+
+        // Parallel resize: each layer is resized independently.
+        let resized: Vec<(RgbaImage, u32, u32, u32)> = layers
+            .par_iter()
+            .map(|layer| {
+                let (w, h) = layer.buffer.dimensions();
+                let downsampled = imageops::resize(
+                    &layer.buffer,
+                    w / AA_FACTOR,
+                    h / AA_FACTOR,
+                    imageops::FilterType::Lanczos3,
+                );
+                (downsampled, layer.x, layer.y, layer.pad)
+            })
+            .collect();
+
+        // Serial composite: each overlay writes to self.base, so this has
+        // to happen on the main thread in the original layer order.
+        for (downsampled, x, y, pad) in resized {
             let downsampled = DynamicImage::ImageRgba8(downsampled);
 
             // The text sits at (pad, pad) inside the small buffer, so after
             // the 3x resize it sits at (pad/AA_FACTOR, pad/AA_FACTOR) in the
             // downsampled image. Subtract that to align the text at (x, y).
-            let offset = (layer.pad / AA_FACTOR) as i64;
-            let cx = (layer.x as i64 - offset).max(0);
-            let cy = (layer.y as i64 - offset).max(0);
+            let offset = (pad / AA_FACTOR) as i64;
+            let cx = (x as i64 - offset).max(0);
+            let cy = (y as i64 - offset).max(0);
             imageops::overlay(&mut self.base, &downsampled, cx, cy);
         }
     }

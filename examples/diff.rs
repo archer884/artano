@@ -112,9 +112,7 @@ fn main() {
     }
 
     println!("\nDiff visualizations written to: {}", out_dir.display());
-    println!(
-        "(method_a = new per-annotation pipeline; method_b = original one-overlay pipeline.)\n"
-    );
+    println!("(method_a and method_b currently use the same code path; diff should be 0.)\n");
 }
 
 fn render_a(
@@ -137,10 +135,11 @@ fn render_b(
     annotations: &[Annotation],
     font: &Font,
 ) -> (DynamicImage, Duration) {
-    let start = Instant::now();
-    let img = artano::legacy::render(image_bytes, annotations, font).expect("legacy render");
-    let time = start.elapsed();
-    (img, time)
+    // Placeholder for the second rendering path. Currently identical to
+    // render_a so the diff is 0 (sanity check that the pipeline is
+    // consistent with itself). Swap in a different rendering path here
+    // to compare against it in the future.
+    render_a(image_bytes, annotations, font)
 }
 
 fn canvas_to_image(canvas: &Canvas) -> DynamicImage {

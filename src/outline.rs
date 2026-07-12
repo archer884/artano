@@ -11,11 +11,10 @@ const BLACK_PIXEL: Rgba<u8> = Rgba([0, 0, 0, 255]);
 
 /// Render one line of caption text with a black outline into `pixels`.
 ///
-/// Same inputs and same visual effect as the original (now-`legacy`)
-/// implementation, but the outline is produced by a single morphology
-/// dilate with a 1-pixel ring structuring element at the outline radius,
-/// instead of `imageproc::edges::canny` + a `draw_hollow_circle_mut` per
-/// edge pixel.
+/// The outline is produced by a single morphology dilate with a 1-pixel
+/// ring structuring element at the outline radius, instead of the
+/// `imageproc::edges::canny` + `draw_hollow_circle_mut`-per-edge-pixel
+/// approach used by the pre-refactor implementation.
 pub fn render_line(
     text: &str,
     y_offset: i32,
