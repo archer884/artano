@@ -2,6 +2,7 @@ mod annotation;
 mod canvas;
 mod draw;
 mod error;
+pub mod legacy;
 
 pub use annotation::*;
 pub use canvas::*;
