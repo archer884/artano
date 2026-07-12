@@ -19,5 +19,5 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
 
-[LICENSE-APACHE]: https://github.com/archer884/artano/blob/master/LICENSE-MIT
-[LICENSE-MIT]: https://github.com/archer884/artano/blob/master/LICENSE-APACHE
+[LICENSE-APACHE]: https://github.com/archer884/artano/blob/master/LICENSE-APACHE
+[LICENSE-MIT]: https://github.com/archer884/artano/blob/master/LICENSE-MIT
